@@ -1,11 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  MoreHorizontal,
-  Search,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Search } from "lucide-react";
 import { IconButton } from "./icon-button";
 import { Table } from "./table/table";
 import { TableHeader } from "./table/table-header";
@@ -15,16 +8,17 @@ import { ChangeEvent, useEffect, useState } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { faker } from "@faker-js/faker";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
 
 interface Attendee {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  createdAt: string;
-  checkedInAt: string | null;
+  createdAt: Date;
+  checkedInAt: Date | null; 
 }
 
 export function AttendeeList() {
@@ -53,22 +47,19 @@ export function AttendeeList() {
   const totalPages = Math.ceil(total / 10);
 
   useEffect(() => {
-    const url = new URL(
-      "http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees",
-    );
+    const fakeAttendees = Array.from({ length: 200 }).map(() => {
+      return {
+        id: faker.number.int({ min: 10000, max: 20000 }),
+        name: faker.person.fullName(),
+        email: faker.internet.email().toLocaleLowerCase(),
+        createdAt: faker.date.recent({ days: 30 }),
+        checkedInAt: faker.date.recent({ days: 7 }),
+      };
+    });
 
-    url.searchParams.set("pageIndex", String(page - 1));
-    if (search.length > 1) {
-      url.searchParams.set("query", search);
-    }
-
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
-        setAttendees(data.attendees);
-        setTotal(data.total);
-      });
-  }, [page, search]);
+    setAttendees(fakeAttendees);
+    setTotal(fakeAttendees.length);
+  }, []);
 
   function setCurrentSearch(search: string) {
     const url = new URL(window.location.toString());
@@ -88,6 +79,17 @@ export function AttendeeList() {
     window.history.pushState({}, "", url);
 
     setPage(page);
+  }
+
+  function getPaginatedAttendees(): Attendee[] {
+    const filteredAttendees = attendees.filter((attendee) =>
+      attendee.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const startIndex = (page - 1) * 10;
+    const endIndex = Math.min(startIndex + 10, filteredAttendees.length);
+
+    return filteredAttendees.slice(startIndex, endIndex);
   }
 
   function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
@@ -143,30 +145,30 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {attendees.map((ateendee) => {
+        {getPaginatedAttendees().map((attendee) => {
             return (
-              <TableRow key={ateendee.id}>
+              <TableRow key={attendee.id}>
                 <TableCell>
                   <input
                     type="checkbox"
                     className="focus:outline-orange-400 size-4 bg-black/20 rounded border text-orange-400 border-white/10"
                   />
                 </TableCell>
-                <TableCell>{ateendee.id}</TableCell>
+                <TableCell>{attendee.id}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <span className="font-semibold text-white">
-                      {ateendee.name}
+                      {attendee.name}
                     </span>
-                    <span>{ateendee.email}</span>
+                    <span>{attendee.email}</span>
                   </div>
                 </TableCell>
-                <TableCell>{dayjs().to(ateendee.createdAt)}</TableCell>
+                <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
                 <TableCell>
-                  {ateendee.checkedInAt === null ? (
+                  {attendee.checkedInAt === null ? (
                     <span className="text-zinc-400">Não fez check-in</span>
                   ) : (
-                    dayjs().to(ateendee.checkedInAt)
+                    dayjs().to(attendee.checkedInAt)
                   )}
                 </TableCell>
                 <TableCell>
