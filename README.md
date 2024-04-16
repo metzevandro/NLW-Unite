@@ -16,6 +16,7 @@ Este projeto consiste em uma tabela dinâmica desenvolvida em React, utilizando 
 - **Dados Falsos**: Utilização do faker.js para preencher a tabela com informações fictícias.
 
 ## Futuras alterações
+- Adicionar responsividade a tabela;
 - Adicionar funcionalidade aos botões de cada linha da tabela;
 - Adicionar uma funcionalidade aos checkboxs e assim adicionar uma exportação em .csv;
 
